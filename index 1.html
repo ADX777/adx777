@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>🛡️ Crypto Note Lock</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #FFD700;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #FFD700;
+    }
+    .container {
+      background: #111;
+      padding: 20px;
+      border: 1px solid #FFD700;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      font-size: 1rem;
+      border: none;
+      outline: none;
+    }
+    input {
+      background: #222;
+      color: #FFD700;
+      border: 1px solid #333;
+    }
+    button {
+      background: #FFD700;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ffa500;
+    }
+    .label {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Crypto Note Lock</h1>
+  <div class="container">
+    <div class="label">🔐 Ghi chú cần mã hóa</div>
+    <input id="noteInput" placeholder="Nhập ghi chú của bạn...">
+    <div class="label">💱 Coin để mở khóa</div>
+    <input id="coinInput" placeholder="VD: BTCUSDT">
+    <div class="label">🎯 Giá mở khóa</div>
+    <input id="targetPriceInput" placeholder="VD: 60000">
+    <div class="label">⏰ Thời gian mở khóa (ISO UTC)</div>
+    <input id="unlockTimeInput" type="datetime-local">
+    <button onclick="encryptNote()">🔒 Mã hóa</button>
+    <div class="label">📦 Mã đã mã hóa</div>
+    <input id="encryptedOutput" readonly>
+    <div class="label">🧩 Dán mã để giải mã</div>
+    <input id="decryptInput" placeholder="Dán mã...">
+    <button onclick="decryptNote()">🔓 Giải mã</button>
+    <div class="label">📜 Ghi chú đã giải mã</div>
+    <input id="decryptedNote" readonly>
+  </div>
+  <script src="encryptor.js"></script>
+</body>
+</html>
