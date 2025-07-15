@@ -1,75 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🔐 TimeLock Ghi Chú</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>🔐 TimeLock Ghi Chú</h1>
     <h2>1. Nhập ghi chú & mã hóa</h2>
-    <label>📝 Ghi chú bí mật:</label>
+
+    <label>📝 Ghi chú:</label>
     <textarea id="noteInput" placeholder="Nhập ghi chú..."></textarea>
 
-    <label>💲 Cặp coin (ví dụ: BTCUSDT):</label>
-    <input id="coinInput" placeholder="Bắt đầu nhập...">
+    <label>💴 Cặp coin (ví dụ: BTCUSDT)</label>
+    <input id="coinInput" list="coinList" placeholder="Bắt đầu nhập..." />
+    <datalist id="coinList">
+      <option value="BTCUSDT">
+      <option value="ETHUSDT">
+      <option value="BNBUSDT">
+    </datalist>
 
-    <p>💵 Giá hiện tại: <span id="priceDisplay">Đang tải...</span></p>
+    <div id="priceDisplay">💰 Giá hiện tại: Đang tải...</div>
 
     <label>💰 Mức giá mong muốn:</label>
-    <input id="targetPrice" placeholder="VD: 62000">
+    <input id="priceInput" placeholder="VD: 62000" />
 
     <label>⏰ Thời gian khóa:</label>
-    <input type="datetime-local" id="unlockTime">
+    <input type="datetime-local" id="timeInput" />
 
-    <button onclick="encryptNote()">🔐 Mã hóa</button>
-    <textarea id="encryptedNote" placeholder="Mã đã mã hóa..." readonly></textarea>
+    <button onclick="encrypt()">🔐 Mã hóa</button>
 
-    <h2>2. Giải mã ghi chú</h2>
-    <textarea id="noteToDecrypt" placeholder="Nhập mã đã mã hóa..."></textarea>
-    <button onclick="decryptNote()">🔓 Giải mã</button>
-    <textarea id="decryptedNote" placeholder="Ghi chú đã giải mã..." readonly></textarea>
+    <h2>2. Giải mã</h2>
+    <label>📦 Mã đã mã hóa</label>
+    <textarea id="encryptedInput" placeholder='{"data":"..."}'></textarea>
+    <button onclick="decrypt()">🔓 Giải mã</button>
+
+    <h2>Kết quả giải mã:</h2>
+    <div id="output"></div>
   </div>
   <script src="script.js"></script>
 </body>
 </html>
 body {
   background-color: #000;
-  color: #FFD700;
-  font-family: 'Courier New', Courier, monospace;
-  text-align: center;
+  color: #ffd700;
+  font-family: 'Courier New', monospace;
   padding: 20px;
 }
-
 .container {
   max-width: 600px;
   margin: auto;
 }
-
 input, textarea {
   width: 100%;
-  margin: 10px 0;
   padding: 10px;
-  border: none;
+  margin: 5px 0 15px;
   border-radius: 5px;
+  border: none;
+  font-size: 16px;
 }
-
 button {
-  background-color: #FFD700;
-  color: #000;
+  background-color: #ffd700;
+  color: black;
+  font-weight: bold;
   border: none;
   padding: 12px;
-  font-weight: bold;
+  width: 100%;
   border-radius: 5px;
   cursor: pointer;
-  margin-bottom: 20px;
+  font-size: 16px;
 }
-async function fetchPrice(coin) {
-  const binanceUrl = `https://api.binance.com/api/v3/ticker/price?symbol=${coin.toUpperCase()}`;
+button:hover {
+  background-color: #ffcc00;
+}
+#output {
+  background: #111;
+  padding: 15px;
+  border-radius: 5px;
+  color: #00ff66;
+  white-space: pre-wrap;
+}
+async function fetchPrice(symbol) {
   try {
-    const res = await fetch(binanceUrl);
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
     const data = await res.json();
     return parseFloat(data.price);
   } catch {
@@ -77,57 +92,64 @@ async function fetchPrice(coin) {
   }
 }
 
-document.getElementById("coinInput").addEventListener("input", async (e) => {
-  const coin = e.target.value;
-  const price = await fetchPrice(coin);
-  document.getElementById("priceDisplay").textContent = price ? price : "Không lấy được";
-});
-
-function encryptNote() {
-  const note = document.getElementById("noteInput").value;
-  const coin = document.getElementById("coinInput").value;
-  const target = document.getElementById("targetPrice").value;
-  const time = document.getElementById("unlockTime").value;
-  const payload = { note, coin, target, time };
-  const encoded = btoa(JSON.stringify(payload));
-  document.getElementById("encryptedNote").value = encoded;
+function aesEncrypt(text, key) {
+  return btoa(unescape(encodeURIComponent(text))); // Simulate AES
 }
 
-async function decryptNote() {
-  const encoded = document.getElementById("noteToDecrypt").value;
+function aesDecrypt(cipher) {
+  return decodeURIComponent(escape(atob(cipher)));
+}
+
+async function encrypt() {
+  const note = document.getElementById("noteInput").value;
+  const coin = document.getElementById("coinInput").value.toUpperCase();
+  const price = document.getElementById("priceInput").value;
+  const time = document.getElementById("timeInput").value;
+
+  if (!note || !coin || !price || !time) {
+    alert("Điền đầy đủ thông tin trước khi mã hóa.");
+    return;
+  }
+
+  const encrypted = aesEncrypt(note);
+  const payload = {
+    data: encrypted,
+    coin,
+    price,
+    time
+  };
+
+  document.getElementById("encryptedInput").value = JSON.stringify(payload);
+}
+
+async function decrypt() {
+  const input = document.getElementById("encryptedInput").value;
+  if (!input) return;
+
   try {
-    const decoded = JSON.parse(atob(encoded));
+    const obj = JSON.parse(input);
     const now = new Date();
-    const unlockTime = new Date(decoded.time);
-    const price = await fetchPrice(decoded.coin);
-    const canUnlock = (price >= parseFloat(decoded.target)) || (now >= unlockTime);
-    document.getElementById("decryptedNote").value = canUnlock ? decoded.note : "🔒 Chưa đủ điều kiện giải mã!";
-  } catch {
-    document.getElementById("decryptedNote").value = "❌ Mã không hợp lệ!";
+    const unlockTime = new Date(obj.time);
+
+    const price = await fetchPrice(obj.coin);
+    document.getElementById("priceDisplay").innerText = `💰 Giá hiện tại: ${price}`;
+
+    if (price >= obj.price || now >= unlockTime) {
+      const decrypted = aesDecrypt(obj.data);
+      document.getElementById("output").innerText =
+        `📝 Ghi chú: ${decrypted}\n💸 Coin: ${obj.coin}\n💰 Giá kỳ vọng: ${obj.price}\n⏰ Mở khóa sau: ${obj.time}`;
+    } else {
+      document.getElementById("output").innerText = `🔒 Chưa đạt điều kiện mở khóa.\nGiá hiện tại: ${price}\nGiá yêu cầu: ${obj.price}\nThời gian mở: ${obj.time}`;
+    }
+  } catch (e) {
+    document.getElementById("output").innerText = "❌ Dữ liệu mã hóa không hợp lệ.";
   }
 }
-body {
-  background-color: #000;
-  color: #FFD700;
-  font-family: 'Courier New', Courier, monospace;
-  text-align: center;
-  padding: 20px;
-}
-input, textarea {
-  background-color: #111;
-  color: #FFD700;
-  border: 1px solid #FFD700;
-  border-radius: 6px;
-  padding: 8px;
-  margin: 5px;
-  width: 90%;
-}
-button {
-  background-color: #FFD700;
-  color: #000;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
+
+document.getElementById("coinInput").addEventListener("input", async (e) => {
+  const symbol = e.target.value.toUpperCase();
+  if (symbol.length >= 6) {
+    const price = await fetchPrice(symbol);
+    document.getElementById("priceDisplay").innerText = price ? `💰 Giá hiện tại: ${price}` : "❌ Không lấy được giá.";
+  }
+});
